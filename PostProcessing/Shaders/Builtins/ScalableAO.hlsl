@@ -47,7 +47,6 @@ static const float kBeta = 0.002;
 // System built-in variables
 TEXTURE2D_SAMPLER2D(_MainTex, sampler_MainTex);
 TEXTURE2D_SAMPLER2D(_CameraGBufferTexture2, sampler_CameraGBufferTexture2);
-TEXTURE2D_SAMPLER2D(_CameraDepthTexture, sampler_CameraDepthTexture);
 TEXTURE2D_SAMPLER2D(_CameraDepthNormalsTexture, sampler_CameraDepthNormalsTexture);
 
 float4 _MainTex_TexelSize;
@@ -104,7 +103,10 @@ float CheckBounds(float2 uv, float d)
 // Depth/normal sampling functions
 float SampleDepth(float2 uv)
 {
-    float d = Linear01Depth(SAMPLE_DEPTH_TEXTURE_LOD(_CameraDepthTexture, sampler_CameraDepthTexture, UnityStereoTransformScreenSpaceTex(uv), 0));
+    float4 enc = SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraDepthN
+ormalsTexture, uv);
+
+    float d = DecodeFloatRG(enc.zw);
     return d * _ProjectionParams.z + CheckBounds(uv, d);
 }
 
@@ -126,8 +128,14 @@ float3 SampleNormal(float2 uv)
 
 float SampleDepthNormal(float2 uv, out float3 normal)
 {
-    normal = SampleNormal(UnityStereoTransformScreenSpaceTex(uv));
-    return SampleDepth(uv);
+    float d;
+
+    DecodeDepthNormal(SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraD
+epthNormalsTexture, uv), d, normal);
+
+    normal *= float3(1.0, 1.0, -1.0);
+
+    return d * _ProjectionParams.z + CheckBounds(uv, d);
 }
 
 // Normal vector comparer (for geometry-aware weighting)
@@ -248,8 +256,7 @@ float4 FragAO(VaryingsDefault i) : SV_Target
 
     // Apply fog when enabled (forward-only)
 #if (APPLY_FORWARD_FOG)
-    float d = Linear01Depth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, i.texcoordStereo));
-    d = ComputeFogDistance(d);
+    float d = SampleDepth(i.texcoordStereo);
     ao *= ComputeFog(d);
 #endif
 
