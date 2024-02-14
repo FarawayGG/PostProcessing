@@ -103,8 +103,7 @@ float CheckBounds(float2 uv, float d)
 // Depth/normal sampling functions
 float SampleDepth(float2 uv)
 {
-    float4 enc = SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraDepthN
-ormalsTexture, uv);
+    float4 enc = SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraDepthNormalsTexture, uv);
 
     float d = DecodeFloatRG(enc.zw);
     return d * _ProjectionParams.z + CheckBounds(uv, d);
@@ -130,8 +129,7 @@ float SampleDepthNormal(float2 uv, out float3 normal)
 {
     float d;
 
-    DecodeDepthNormal(SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraD
-epthNormalsTexture, uv), d, normal);
+    DecodeDepthNormal(SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraDepthNormalsTexture, uv), d, normal);
 
     normal *= float3(1.0, 1.0, -1.0);
 
