@@ -239,6 +239,18 @@ float3 DecodeViewNormalStereo(float4 enc4)
     return n;
 }
 
+inline float DecodeFloatRG( float2 enc )
+{
+    float2 kDecodeDot = float2(1.0, 1/255.0);
+    return dot( enc, kDecodeDot );
+}
+
+inline void DecodeDepthNormal( float4 enc, out float depth, out float3 normal )
+{
+    depth = DecodeFloatRG (enc.zw);
+    normal = DecodeViewNormalStereo (enc);
+}
+
 // Interleaved gradient function from Jimenez 2014
 // http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
 float GradientNoise(float2 uv)

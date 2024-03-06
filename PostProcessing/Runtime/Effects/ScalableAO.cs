@@ -38,7 +38,7 @@ namespace UnityEngine.Rendering.PostProcessing
 
         public DepthTextureMode GetCameraFlags()
         {
-            return DepthTextureMode.Depth | DepthTextureMode.DepthNormals;
+            return DepthTextureMode.DepthNormals;
         }
 
         void DoLazyInitialization(PostProcessRenderContext context)

@@ -4,7 +4,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
 
         #pragma exclude_renderers psp2
         #pragma target 3.0
-  
+
     ENDHLSL
 
     SubShader
@@ -20,7 +20,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
                 #pragma fragment FragAO
                 #pragma multi_compile _ APPLY_FORWARD_FOG
                 #pragma multi_compile _ FOG_LINEAR FOG_EXP FOG_EXP2
-                #define SOURCE_DEPTH
+                #define SOURCE_DEPTHNORMALS
                 #include "Packages/com.unity.postprocessing/PostProcessing/Shaders/Builtins/ScalableAO.hlsl"
 
             ENDHLSL
