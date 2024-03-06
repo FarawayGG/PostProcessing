@@ -154,15 +154,15 @@ namespace UnityEngine.Rendering.PostProcessing
 
             // Do bloom on a half-res buffer, full-res doesn't bring much and kills performances on
             // fillrate limited platforms
-            int tw = Mathf.FloorToInt(context.screenWidth / (2f - rw));
-            int th = Mathf.FloorToInt(context.screenHeight / (2f - rh));
+            int tw = Mathf.FloorToInt(context.screenWidth / (2f - rw)) / 2;
+            int th = Mathf.FloorToInt(context.screenHeight / (2f - rh)) / 2;
             bool singlePassDoubleWide = (context.stereoActive && (context.stereoRenderingMode == PostProcessRenderContext.StereoRenderingMode.SinglePass) && (context.camera.stereoTargetEye == StereoTargetEyeMask.Both));
-            int tw_stereo = singlePassDoubleWide ? tw * 2 : tw; 
+            int tw_stereo = singlePassDoubleWide ? tw * 2 : tw;
 
             // Determine the iteration count
             int s = Mathf.Max(tw, th);
             float logs = Mathf.Log(s, 2f) + Mathf.Min(settings.diffusion.value, 10f) - 10f;
-            int logs_i = Mathf.FloorToInt(logs); 
+            int logs_i = Mathf.FloorToInt(logs);
             int iterations = Mathf.Clamp(logs_i, 1, k_MaxPyramidSize);
             float sampleScale = 0.5f + logs - logs_i;
             sheet.properties.SetFloat(ShaderIDs.SampleScale, sampleScale);
@@ -193,8 +193,8 @@ namespace UnityEngine.Rendering.PostProcessing
 
                 lastDown = mipDown;
                 tw_stereo = (singlePassDoubleWide && ((tw_stereo / 2) % 2 > 0)) ? 1 + tw_stereo / 2 : tw_stereo / 2;
-                tw_stereo = Mathf.Max(tw_stereo, 1);
-                th = Mathf.Max(th / 2, 1);
+                tw_stereo = Mathf.Max(tw_stereo / 2, 1);
+                th = Mathf.Max(th / 4, 1);
             }
 
             // Upsample
