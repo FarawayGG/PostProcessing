@@ -17,7 +17,8 @@ namespace UnityEngine.Rendering.PostProcessing
             BuiltinRenderTextureType.CameraTarget // Ambient
         };
 
-        readonly int[] m_SampleCount = { 4, 6, 10, 8, 12 };
+        readonly int[] m_SampleCount = { 3, 6, 10, 8, 12 };
+        readonly float[] m_Downsample = { 0.5f, 0.5f, 0.5f, 1.0f, 1.0f};
 
         enum Pass
         {
@@ -65,6 +66,10 @@ namespace UnityEngine.Rendering.PostProcessing
                 reset = true;
             }
 
+            m_Result.width = (int)(context.width * m_Downsample[(int)m_Settings.quality.value]);
+            m_Result.height = (int)(context.height * m_Downsample[(int)m_Settings.quality.value]);
+
+
             if (reset)
                 m_Result.Create();
         }
@@ -76,10 +81,9 @@ namespace UnityEngine.Rendering.PostProcessing
 
             // Material setup
             // Always use a quater-res AO buffer unless High/Ultra quality is set.
-            bool downsampling = (int)m_Settings.quality.value < (int)AmbientOcclusionQuality.High;
             float px = m_Settings.intensity.value;
             float py = m_Settings.radius.value;
-            float pz = downsampling ? 0.5f : 1f;
+            float pz = m_Downsample[(int)m_Settings.quality.value];
             float pw = m_SampleCount[(int)m_Settings.quality.value];
 
             var sheet = m_PropertySheet;
@@ -100,7 +104,7 @@ namespace UnityEngine.Rendering.PostProcessing
             }
 
             // Texture setup
-            int ts = downsampling ? 2 : 1;
+            int ts = (int)(1.0f / pz);
             const RenderTextureFormat kFormat = RenderTextureFormat.ARGB32;
             const RenderTextureReadWrite kRWMode = RenderTextureReadWrite.Linear;
             const FilterMode kFilter = FilterMode.Bilinear;
@@ -116,7 +120,7 @@ namespace UnityEngine.Rendering.PostProcessing
 
             // Blur buffer
             var rtBlur = ShaderIDs.OcclusionTexture2;
-            context.GetScreenSpaceTemporaryRT(cmd, rtBlur, 0, kFormat, kRWMode, kFilter);
+            context.GetScreenSpaceTemporaryRT(cmd, rtBlur, 0, kFormat, kRWMode, kFilter, scaledWidth, scaledHeight);
 
             // Separable blur (horizontal pass)
             cmd.BlitFullscreenTriangle(rtMask, rtBlur, sheet, (int)Pass.HorizontalBlurForward + occlusionSource);
