@@ -387,7 +387,7 @@ half BlurSmall(TEXTURE2D_ARGS(tex, samp), float2 uv, float2 delta)
 float4 FragComposition(VaryingsDefault i) : SV_Target
 {
     float2 delta = _SAOcclusionTexture_TexelSize.xy / DOWNSAMPLE;
-    half ao = BlurSmall(TEXTURE2D_PARAM(_SAOcclusionTexture, sampler_SAOcclusionTexture), float2(i.texcoord.x , 1.0f - i.texcoord.y), delta);
+    half ao = BlurSmall(TEXTURE2D_PARAM(_SAOcclusionTexture, sampler_SAOcclusionTexture), i.texcoord, delta);
     ao = EncodeAO(ao);
     return float4(ao * _AOColor, ao);
 }
