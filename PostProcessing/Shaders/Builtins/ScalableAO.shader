@@ -14,6 +14,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
         // 0 - Occlusion estimation with CameraDepthTexture
         Pass
         {
+            Tags { "LightMode" = "OcclusionEstimation" }
             HLSLPROGRAM
 
                 #pragma vertex VertDefault
@@ -29,6 +30,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
         // 1 - Occlusion estimation with G-Buffer
         Pass
         {
+            Tags { "LightMode" = "OcclusionEstimationDeffered" }
             HLSLPROGRAM
 
                 #pragma vertex VertDefault
@@ -44,6 +46,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
         // 2 - Separable blur (horizontal pass) with CameraDepthNormalsTexture
         Pass
         {
+            Tags { "LightMode" = "HorizontalBlur" }
             HLSLPROGRAM
 
                 #pragma vertex VertDefault
@@ -59,6 +62,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
         // 3 - Separable blur (horizontal pass) with G-Buffer
         Pass
         {
+            Tags { "LightMode" = "HorizontalBlurDeffered" }
             HLSLPROGRAM
 
                 #pragma vertex VertDefault
@@ -74,6 +78,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
         // 4 - Separable blur (vertical pass)
         Pass
         {
+            Tags { "LightMode" = "VerticalBlur" }
             HLSLPROGRAM
 
                 #pragma vertex VertDefault
@@ -87,6 +92,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
         // 5 - Final composition
         Pass
         {
+            Tags { "LightMode" = "VerticalBlurDeferred" }
             Blend Zero OneMinusSrcColor, Zero OneMinusSrcAlpha
 
             HLSLPROGRAM
@@ -101,6 +107,7 @@ Shader "Hidden/PostProcessing/ScalableAO"
         // 6 - Final composition (ambient only mode)
         Pass
         {
+            Tags { "LightMode" = "FinalComposition" }
             Blend Zero OneMinusSrcColor, Zero OneMinusSrcAlpha
 
             HLSLPROGRAM

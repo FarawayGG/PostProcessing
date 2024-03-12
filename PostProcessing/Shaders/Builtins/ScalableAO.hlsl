@@ -211,11 +211,18 @@ float4 FragAO(VaryingsDefault i) : SV_Target
     float3 norm_o;
     float depth_o = SampleDepthNormal(uv, norm_o);
 
+    // Early out if the depth is out of bounds
+    if (depth_o > _ProjectionParams.z * 0.99) {
+        return float4(0.0, 0.0, 0.0, 0.0);
+    }
+
     // Reconstruct the view-space position.
     float3 vpos_o = ReconstructViewPos(uv, depth_o, p11_22, p13_31);
 
     float ao = 0.0;
 
+    // max unroll count is 6
+    [unroll(6)]
     for (int s = 0; s < int(SAMPLE_COUNT); s++)
     {
         // Sample point
@@ -315,6 +322,12 @@ float4 FragBlur(VaryingsDefault i) : SV_Target
 
     // Fater 5-tap Gaussian with linear sampling
     half4 p0  = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.texcoordStereo);
+
+    // Early out if the depth is out of bounds
+    if (p0.x < 0.0001 && p0.y < 0.0001 && p0.z < 0.0001 && p0.w < 0.0001) {
+        return p0;
+    }
+
     half4 p1a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta * 1.3846153846));
     half4 p1b = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord + delta * 1.3846153846));
     half4 p2a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta * 3.2307692308));
@@ -360,6 +373,11 @@ half EncodeAO(half x)
 half BlurSmall(TEXTURE2D_ARGS(tex, samp), float2 uv, float2 delta)
 {
     half4 p0 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv));
+
+    if (p0.x < 0.0001 && p0.y < 0.0001 && p0.z < 0.0001 && p0.w < 0.0001) {
+        return GetPackedAO(p0);
+    }
+
     half4 p1 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv + float2(-delta.x, -delta.y)));
     half4 p2 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv + float2( delta.x, -delta.y)));
     half4 p3 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv + float2(-delta.x,  delta.y)));

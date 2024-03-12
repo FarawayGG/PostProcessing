@@ -17,8 +17,8 @@ namespace UnityEngine.Rendering.PostProcessing
             BuiltinRenderTextureType.CameraTarget // Ambient
         };
 
-        readonly int[] m_SampleCount = { 3, 6, 10, 8, 12 };
-        readonly float[] m_Downsample = { 0.5f, 0.5f, 0.5f, 1.0f, 1.0f};
+        readonly int[] m_SampleCount = { 3, 6, 4, 8, 12 };
+        readonly float[] m_Downsample = { 0.5f, 0.5f, 1.0f, 1.0f, 1.0f};
 
         enum Pass
         {
@@ -66,8 +66,8 @@ namespace UnityEngine.Rendering.PostProcessing
                 reset = true;
             }
 
-            m_Result.width = (int)(context.width * m_Downsample[(int)m_Settings.quality.value]);
-            m_Result.height = (int)(context.height * m_Downsample[(int)m_Settings.quality.value]);
+            // m_Result.width = (int)(context.width * m_Downsample[(int)m_Settings.quality.value]);
+            // m_Result.height = (int)(context.height * m_Downsample[(int)m_Settings.quality.value]);
 
 
             if (reset)
