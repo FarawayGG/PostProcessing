@@ -17,8 +17,8 @@ namespace UnityEngine.Rendering.PostProcessing
             BuiltinRenderTextureType.CameraTarget // Ambient
         };
 
-        readonly int[] m_SampleCount = { 3, 6, 4, 8, 12 };
-        readonly float[] m_Downsample = { 0.5f, 0.5f, 1.0f, 1.0f, 1.0f};
+        readonly int[] m_SampleCount = { 3, 6, 3, 5, 12 };
+        readonly float[] m_Downsample = { 0.5f, 0.5f, 0.75f, 1.0f, 1.0f};
 
         enum Pass
         {
@@ -66,9 +66,8 @@ namespace UnityEngine.Rendering.PostProcessing
                 reset = true;
             }
 
-            // m_Result.width = (int)(context.width * m_Downsample[(int)m_Settings.quality.value]);
-            // m_Result.height = (int)(context.height * m_Downsample[(int)m_Settings.quality.value]);
-
+            m_Result.width = (int)(context.width * m_Downsample[(int)m_Settings.quality.value]);
+            m_Result.height = (int)(context.height * m_Downsample[(int)m_Settings.quality.value]);
 
             if (reset)
                 m_Result.Create();
@@ -104,15 +103,14 @@ namespace UnityEngine.Rendering.PostProcessing
             }
 
             // Texture setup
-            int ts = (int)(1.0f / pz);
             const RenderTextureFormat kFormat = RenderTextureFormat.ARGB32;
             const RenderTextureReadWrite kRWMode = RenderTextureReadWrite.Linear;
             const FilterMode kFilter = FilterMode.Bilinear;
 
             // AO buffer
             var rtMask = ShaderIDs.OcclusionTexture1;
-            int scaledWidth = context.width / ts;
-            int scaledHeight = context.height / ts;
+            int scaledWidth = (int)(context.width * pz);
+            int scaledHeight = (int)(context.height * pz);
             context.GetScreenSpaceTemporaryRT(cmd, rtMask, 0, kFormat, kRWMode, kFilter, scaledWidth, scaledHeight);
 
             // AO estimation
