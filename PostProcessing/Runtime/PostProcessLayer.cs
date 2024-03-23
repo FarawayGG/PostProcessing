@@ -23,6 +23,8 @@ namespace UnityEngine.Rendering.PostProcessing
     [RequireComponent(typeof(Camera))]
     public sealed class PostProcessLayer : MonoBehaviour
     {
+        public bool autoUpdate = true;
+
         /// <summary>
         /// Builtin anti-aliasing methods.
         /// </summary>
@@ -201,7 +203,7 @@ namespace UnityEngine.Rendering.PostProcessing
         PostProcessRenderContext m_CurrentContext;
         LogHistogram m_LogHistogram;
 
-        bool m_SettingsUpdateNeeded = true;
+        public bool m_SettingsUpdateNeeded = true;
         bool m_IsRenderingInSceneView = false;
 
         TargetPool m_TargetPool;
@@ -911,7 +913,7 @@ namespace UnityEngine.Rendering.PostProcessing
                     Shader.SetGlobalFloat(ShaderIDs.RenderViewportScaleFactor, 1f);
             }
 
-            m_SettingsUpdateNeeded = false;
+            m_SettingsUpdateNeeded = autoUpdate;
         }
 
         /// <summary>
@@ -1082,7 +1084,7 @@ namespace UnityEngine.Rendering.PostProcessing
             // End frame cleanup
             TextureLerper.instance.EndFrame();
             debugLayer.EndFrame();
-            m_SettingsUpdateNeeded = true;
+            // m_SettingsUpdateNeeded = true;
             m_NaNKilled = false;
         }
 
