@@ -913,7 +913,7 @@ namespace UnityEngine.Rendering.PostProcessing
                     Shader.SetGlobalFloat(ShaderIDs.RenderViewportScaleFactor, 1f);
             }
 
-            m_SettingsUpdateNeeded = autoUpdate;
+            m_SettingsUpdateNeeded = false;
         }
 
         /// <summary>
@@ -1084,7 +1084,7 @@ namespace UnityEngine.Rendering.PostProcessing
             // End frame cleanup
             TextureLerper.instance.EndFrame();
             debugLayer.EndFrame();
-            // m_SettingsUpdateNeeded = true;
+            m_SettingsUpdateNeeded = autoUpdate;
             m_NaNKilled = false;
         }
 
