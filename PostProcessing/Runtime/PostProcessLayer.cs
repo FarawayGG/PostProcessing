@@ -23,6 +23,8 @@ namespace UnityEngine.Rendering.PostProcessing
     [RequireComponent(typeof(Camera))]
     public sealed class PostProcessLayer : MonoBehaviour
     {
+        public bool autoUpdate = true;
+
         /// <summary>
         /// Builtin anti-aliasing methods.
         /// </summary>
@@ -201,7 +203,7 @@ namespace UnityEngine.Rendering.PostProcessing
         PostProcessRenderContext m_CurrentContext;
         LogHistogram m_LogHistogram;
 
-        bool m_SettingsUpdateNeeded = true;
+        public bool m_SettingsUpdateNeeded = true;
         bool m_IsRenderingInSceneView = false;
 
         TargetPool m_TargetPool;
@@ -256,23 +258,25 @@ namespace UnityEngine.Rendering.PostProcessing
 
 #if UNITY_2019_1_OR_NEWER
         bool DynamicResolutionAllowsFinalBlitToCameraTarget()
-        { 
+        {
             return (!m_Camera.allowDynamicResolution || (ScalableBufferManager.heightScaleFactor == 1.0 && ScalableBufferManager.widthScaleFactor == 1.0));
         }
 #endif
 
-#if UNITY_2019_1_OR_NEWER
-        // We always use a CommandBuffer to blit to the final render target
-        // OnRenderImage is used only to avoid the automatic blit from the RenderTexture of Camera.forceIntoRenderTexture to the actual target
-        [ImageEffectUsesCommandBuffer]
-        void OnRenderImage(RenderTexture src, RenderTexture dst)
-        {
-            if (finalBlitToCameraTarget && !m_CurrentContext.stereoActive && DynamicResolutionAllowsFinalBlitToCameraTarget())
-                RenderTexture.active = dst; // silence warning
-            else
-                Graphics.Blit(src, dst);
-        }
-#endif
+        // FIXME: commented out for now.
+        // In our case it causes two unexpected blits to the camera target when using the legacy pipeline
+// #if UNITY_2019_1_OR_NEWER
+//         // We always use a CommandBuffer to blit to the final render target
+//         // OnRenderImage is used only to avoid the automatic blit from the RenderTexture of Camera.forceIntoRenderTexture to the actual target
+//         [ImageEffectUsesCommandBuffer]
+//         void OnRenderImage(RenderTexture src, RenderTexture dst)
+//         {
+//             if (finalBlitToCameraTarget && !m_CurrentContext.stereoActive && DynamicResolutionAllowsFinalBlitToCameraTarget())
+//                 RenderTexture.active = dst; // silence warning
+//             else
+//                 Graphics.Blit(src, dst);
+//         }
+// #endif
 
         /// <summary>
         /// Initializes this layer. If you create the layer via scripting you should always call
@@ -856,7 +860,7 @@ namespace UnityEngine.Rendering.PostProcessing
             // See #1148230
             // Additional !RuntimeUtilities.isValidResources() for fixing issue #1262826
             // The static member s_Resources is unset by addressable. The code is ill formed as it is not made to handle multiple scene.
-            // As the PPV2 is not develop anymore we will not rewrite the system but instead we force a re-init of this value so it is 
+            // As the PPV2 is not develop anymore we will not rewrite the system but instead we force a re-init of this value so it is
             // in a correct state.
             if (m_OldResources != m_Resources || !RuntimeUtilities.isValidResources())
             {
@@ -1080,7 +1084,7 @@ namespace UnityEngine.Rendering.PostProcessing
             // End frame cleanup
             TextureLerper.instance.EndFrame();
             debugLayer.EndFrame();
-            m_SettingsUpdateNeeded = true;
+            m_SettingsUpdateNeeded = autoUpdate;
             m_NaNKilled = false;
         }
 

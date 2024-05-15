@@ -77,7 +77,7 @@ namespace UnityEngine.Rendering.PostProcessing
             {
                 RuntimeUtilities.Destroy(m_GrainLookupRT);
 
-                m_GrainLookupRT = new RenderTexture(128, 128, 0, GetLookupFormat())
+                m_GrainLookupRT = new RenderTexture(32, 32, 0, GetLookupFormat())
                 {
                     filterMode = FilterMode.Bilinear,
                     wrapMode = TextureWrapMode.Repeat,
@@ -91,7 +91,7 @@ namespace UnityEngine.Rendering.PostProcessing
             var sheet = context.propertySheets.Get(context.resources.shaders.grainBaker);
             sheet.properties.Clear();
             sheet.properties.SetFloat(ShaderIDs.Phase, time % 10f);
-            sheet.properties.SetVector(ShaderIDs.GrainNoiseParameters, new Vector3(12.9898f, 78.233f, 43758.5453f));
+            // sheet.properties.SetVector(ShaderIDs.GrainNoiseParameters, new Vector3(12.9898f, 78.233f, 43758.5453f));
 
             context.command.BeginSample("GrainLookup");
             context.command.BlitFullscreenTriangle(BuiltinRenderTextureType.None, m_GrainLookupRT, sheet, settings.colored.value ? 1 : 0);
@@ -120,7 +120,7 @@ namespace UnityEngine.Rendering.PostProcessing
             m_SampleIndex = 0;
         }
     }
-    
+
 #if POSTFX_DEBUG_STATIC_GRAIN
     #pragma warning restore 414
 #endif

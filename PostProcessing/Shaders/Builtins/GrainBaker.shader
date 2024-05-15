@@ -15,7 +15,8 @@ Shader "Hidden/PostProcessing/GrainBaker"
         float Noise(float2 n, float x)
         {
             n += x;
-            return frac(sin(dot(n.xy, _NoiseParameters.xy)) * _NoiseParameters.z);
+            float3 NoiseParameters = float3(12.9898f, 78.233f, 43758.5453f);
+            return frac(sin(dot(n.xy, NoiseParameters.xy)) * NoiseParameters.z);
         }
 
         float Step1(float2 uv, float n)
@@ -65,13 +66,13 @@ Shader "Hidden/PostProcessing/GrainBaker"
 
         float4 FragGrain(VaryingsDefault i) : SV_Target
         {
-            float grain = Step3BW(i.texcoordStereo * float2(128.0, 128.0));
+            float grain = Step3BW(i.texcoordStereo * float2(32.0, 32.0));
             return float4(grain.xxx, 1.0);
         }
 
         float4 FragGrainColored(VaryingsDefault i) : SV_Target
         {
-            float3 grain = Step3(i.texcoordStereo * float2(128.0, 128.0));
+            float3 grain = Step3(i.texcoordStereo * float2(32.0, 32.0));
             return float4(grain, 1.0);
         }
 

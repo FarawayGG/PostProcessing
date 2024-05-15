@@ -14,6 +14,7 @@ namespace UnityEditor.Rendering.PostProcessing
     [CanEditMultipleObjects, CustomEditor(typeof(PostProcessLayer))]
     sealed class PostProcessLayerEditor : BaseEditor<PostProcessLayer>
     {
+        SerializedProperty m_AutoUpdate;
         SerializedProperty m_StopNaNPropagation;
 #pragma warning disable 414
         SerializedProperty m_DirectToCameraTarget;
@@ -64,6 +65,7 @@ namespace UnityEditor.Rendering.PostProcessing
             m_DirectToCameraTarget = FindProperty(x => x.finalBlitToCameraTarget);
             m_VolumeTrigger = FindProperty(x => x.volumeTrigger);
             m_VolumeLayer = FindProperty(x => x.volumeLayer);
+            m_AutoUpdate = FindProperty(x => x.autoUpdate);
 
             m_AntialiasingMode = FindProperty(x => x.antialiasingMode);
             m_TaaJitterSpread = FindProperty(x => x.temporalAntialiasing.jitterSpread);
@@ -106,6 +108,7 @@ namespace UnityEditor.Rendering.PostProcessing
             if (!RuntimeUtilities.scriptableRenderPipelineActive)
                 EditorGUILayout.PropertyField(m_DirectToCameraTarget, EditorUtilities.GetContent("Directly to Camera Target|Use the final blit to the camera render target for postprocessing. This has less overhead but breaks compatibility with legacy image effect that use OnRenderImage."));
 #endif
+            EditorGUILayout.PropertyField(m_AutoUpdate, EditorUtilities.GetContent("Auto update PP volumes"));
 
             EditorGUILayout.Space();
 

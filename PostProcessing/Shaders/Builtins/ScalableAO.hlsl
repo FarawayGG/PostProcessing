@@ -211,11 +211,18 @@ float4 FragAO(VaryingsDefault i) : SV_Target
     float3 norm_o;
     float depth_o = SampleDepthNormal(uv, norm_o);
 
+    // Early out if the depth is out of bounds
+    if (depth_o > _ProjectionParams.z * 0.99) {
+        return float4(0.0, 0.0, 0.0, 0.0);
+    }
+
     // Reconstruct the view-space position.
     float3 vpos_o = ReconstructViewPos(uv, depth_o, p11_22, p13_31);
 
     float ao = 0.0;
 
+    // max unroll count is 6
+    [unroll(6)]
     for (int s = 0; s < int(SAMPLE_COUNT); s++)
     {
         // Sample point
@@ -264,10 +271,17 @@ float4 FragAO(VaryingsDefault i) : SV_Target
 // Geometry-aware separable bilateral filter
 float4 FragBlur(VaryingsDefault i) : SV_Target
 {
+    half4 p0 = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.texcoordStereo);
+
+    // Early out if the depth is out of bounds
+    if (p0.x < 0.0001 && p0.y < 0.0001 && p0.z < 0.0001 && p0.w < 0.0001) {
+        return p0;
+    }
+
 #if defined(BLUR_HORIZONTAL)
     // Horizontal pass: Always use 2 texels interval to match to
     // the dither pattern.
-    float2 delta = float2(_MainTex_TexelSize.x * 2.0, 0.0);
+    float2 delta = float2(_MainTex_TexelSize.x / DOWNSAMPLE * 2.0, 0.0);
 #else
     // Vertical pass: Apply _Downsample to match to the dither
     // pattern in the original occlusion buffer.
@@ -278,7 +292,6 @@ float4 FragBlur(VaryingsDefault i) : SV_Target
 
     // High quality 7-tap Gaussian with adaptive sampling
 
-    half4 p0  = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.texcoordStereo);
     half4 p1a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta));
     half4 p1b = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord + delta));
     half4 p2a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta * 2.0));
@@ -313,33 +326,47 @@ float4 FragBlur(VaryingsDefault i) : SV_Target
 
 #else
 
-    // Fater 5-tap Gaussian with linear sampling
-    half4 p0  = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.texcoordStereo);
-    half4 p1a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta * 1.3846153846));
-    half4 p1b = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord + delta * 1.3846153846));
-    half4 p2a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta * 3.2307692308));
-    half4 p2b = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord + delta * 3.2307692308));
-
 #if defined(BLUR_SAMPLE_CENTER_NORMAL)
     half3 n0 = SampleNormal(i.texcoordStereo);
 #else
     half3 n0 = GetPackedNormal(p0);
 #endif
 
-    half w0  = 0.2270270270;
-    half w1a = CompareNormal(n0, GetPackedNormal(p1a)) * 0.3162162162;
-    half w1b = CompareNormal(n0, GetPackedNormal(p1b)) * 0.3162162162;
-    half w2a = CompareNormal(n0, GetPackedNormal(p2a)) * 0.0702702703;
-    half w2b = CompareNormal(n0, GetPackedNormal(p2b)) * 0.0702702703;
-
     half s;
-    s  = GetPackedAO(p0)  * w0;
-    s += GetPackedAO(p1a) * w1a;
-    s += GetPackedAO(p1b) * w1b;
-    s += GetPackedAO(p2a) * w2a;
-    s += GetPackedAO(p2b) * w2b;
 
-    s /= w0 + w1a + w1b + w2a + w2b;
+    // 3-tap Gaussian with linear sampling
+    half4 p1 = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta));
+    half4 p2 = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord + delta));
+
+    half w0 = 0.5;
+    half w1 = CompareNormal(n0, GetPackedNormal(p1)) * 0.25;
+    half w2 = CompareNormal(n0, GetPackedNormal(p2)) * 0.25;
+
+    s = GetPackedAO(p0) * w0;
+    s += GetPackedAO(p1) * w1;
+    s += GetPackedAO(p2) * w2;
+
+    s /= w0 + w1 + w2;
+
+    // 5-tap Gaussian with linear sampling
+    // half4 p1a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta * 1.3846153846));
+    // half4 p1b = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord + delta * 1.3846153846));
+    // half4 p2a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord - delta * 3.2307692308));
+    // half4 p2b = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, UnityStereoTransformScreenSpaceTex(i.texcoord + delta * 3.2307692308));
+
+    // half w0  = 0.2270270270;
+    // half w1a = CompareNormal(n0, GetPackedNormal(p1a)) * 0.3162162162;
+    // half w1b = CompareNormal(n0, GetPackedNormal(p1b)) * 0.3162162162;
+    // half w2a = CompareNormal(n0, GetPackedNormal(p2a)) * 0.0702702703;
+    // half w2b = CompareNormal(n0, GetPackedNormal(p2b)) * 0.0702702703;
+
+    // s  = GetPackedAO(p0)  * w0;
+    // s += GetPackedAO(p1a) * w1a;
+    // s += GetPackedAO(p1b) * w1b;
+    // s += GetPackedAO(p2a) * w2a;
+    // s += GetPackedAO(p2b) * w2b;
+
+    // s /= w0 + w1a + w1b + w2a + w2b;
 
 #endif
 
@@ -360,6 +387,11 @@ half EncodeAO(half x)
 half BlurSmall(TEXTURE2D_ARGS(tex, samp), float2 uv, float2 delta)
 {
     half4 p0 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv));
+
+    if (p0.x < 0.0001 && p0.y < 0.0001 && p0.z < 0.0001 && p0.w < 0.0001) {
+        return GetPackedAO(p0);
+    }
+
     half4 p1 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv + float2(-delta.x, -delta.y)));
     half4 p2 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv + float2( delta.x, -delta.y)));
     half4 p3 = SAMPLE_TEXTURE2D(tex, samp, UnityStereoTransformScreenSpaceTex(uv + float2(-delta.x,  delta.y)));
