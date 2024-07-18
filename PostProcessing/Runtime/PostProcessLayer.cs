@@ -189,6 +189,8 @@ namespace UnityEngine.Rendering.PostProcessing
         /// </summary>
         public bool haveBundlesBeenInited { get; private set; }
 
+        public RenderTargetIdentifier sourceRT;
+
         // Settings/Renderer bundles mapped to settings types
         Dictionary<Type, PostProcessBundle> m_Bundles;
 
@@ -205,6 +207,7 @@ namespace UnityEngine.Rendering.PostProcessing
         bool m_IsRenderingInSceneView = false;
 
         TargetPool m_TargetPool;
+
 
         bool m_NaNKilled = false;
 
@@ -223,6 +226,8 @@ namespace UnityEngine.Rendering.PostProcessing
             m_LogHistogram = new LogHistogram();
             m_PropertySheetFactory = new PropertySheetFactory();
             m_TargetPool = new TargetPool();
+
+            sourceRT = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
 
             debugLayer.OnEnable();
 
@@ -477,10 +482,11 @@ namespace UnityEngine.Rendering.PostProcessing
             BuildCommandBuffers();
         }
 
-        static bool RequiresInitialBlit(Camera camera, PostProcessRenderContext context)
+        bool RequiresInitialBlit(Camera camera, PostProcessRenderContext context)
         {
             // [ImageEffectUsesCommandBuffer] is currently broken, FIXME
-            return true;
+
+            return sourceRT == BuiltinRenderTextureType.CameraTarget;
 
             /*
 #if UNITY_2019_1_OR_NEWER
@@ -647,7 +653,7 @@ namespace UnityEngine.Rendering.PostProcessing
             }
             else
             {
-                context.source = cameraTarget;
+                context.source = sourceRT;
             }
 
             context.destination = cameraTarget;
@@ -1064,7 +1070,7 @@ namespace UnityEngine.Rendering.PostProcessing
                     RenderFinalPass(context, lastTarget, eye);
 
                 if (context.stereoActive)
-                    context.source = cameraTexture;
+                    context.source = sourceRT;
             }
 
 #if UNITY_2019_1_OR_NEWER
